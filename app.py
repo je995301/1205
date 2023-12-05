@@ -211,7 +211,7 @@ def handle_reminder_time(event):
     # 檢查使用者的狀態
     if (
         user_id in user_reminders and
-        user_reminders[user_id].get('status') == 'waiting_time'
+        user_reminders[user_id].get('status') == 'waiting_time' and message_text is not None
     ):
         # 將使用者的提醒時間加入排程
         schedule_time = message_text
