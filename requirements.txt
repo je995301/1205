@@ -3,4 +3,4 @@ line-bot-sdk
 openai
 gunicorn
 schedule
-Werkzeug
+pytest
