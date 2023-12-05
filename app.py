@@ -197,8 +197,8 @@ def format_menu(health_menu):
         menu_items = health_menu.split('\n')
         formatted_menu = "健康菜單：\n"
         for item in menu_items:
-            if item is not None:
-                formatted_menu += f"- {item}\n"
+            if item is not None and item.strip():
+                formatted_menu += f"- {item.strip()}\n"
         return formatted_menu
     else:
         return "無法生成健康菜單。"
