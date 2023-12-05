@@ -204,7 +204,7 @@ def format_menu(health_menu):
         return "無法生成健康菜單。"
     
 # 處理使用者的選擇
-@handler.add(MessageEvent, message=TextMessage)
+@handler.add(MessageEvent)
 def handle_reminder_time(event):
     user_id = event.source.user_id
     message_text = event.message.text
