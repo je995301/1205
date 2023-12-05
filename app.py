@@ -77,36 +77,51 @@ def handle_message(event):
         )
 
    	# 當使用者選擇訓練菜單時
-    elif message_text == '訓練菜單':
-        # 根據使用者的BMI，記錄下來
-        if user_id not in user_bmi:
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text="請先計算BMI，再進行訓練菜單的選擇。")
-            )
-            return
-
-        # 向ChatGPT請求生成訓練菜單
-        user_bmi_data = user_bmi.get(user_id, {})
-        bmi_value = user_bmi_data.get('bmi', '')
-        goal_value = user_bmi_data.get('goal', '')
-        prompt = f"根據BMI {bmi_value}，請為我生成一份訓練菜單，目標是{goal_value}。"
-        response = openai.completions.create(
-            engine="gpt-3.5-turbo",
-            prompt=prompt,
-            max_tokens=150
-        )
-        
-        training_menu = response['choices'][0]['text']
-        
-        # 記錄使用者的訓練菜單
-        user_training_menu[user_id] = training_menu
-
-        # 回傳訓練菜單給使用者
+elif message_text == '訓練菜單':
+    # 根據使用者的BMI，記錄下來
+    if user_id not in user_bmi:
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=f"你的訓練菜單如下：\n{training_menu}")
+            TextSendMessage(text="請先計算BMI，再進行訓練菜單的選擇。")
         )
+        return
+
+    # 詢問使用者的目標
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text="請告訴我你的訓練目標，例如：增肌、減脂等。")
+    )
+
+    # 設定使用者的狀態為等待目標輸入
+    user_bmi[user_id]['status'] = 'waiting_goal'
+
+# 在處理使用者的選擇部分新增以下程式碼
+elif user_id in user_bmi and user_bmi[user_id].get('status') == 'waiting_goal':
+    # 紀錄使用者的目標
+    user_bmi[user_id]['goal'] = message_text
+
+    # 向ChatGPT請求生成訓練菜單
+    user_bmi_data = user_bmi.get(user_id, {})
+    bmi_value = user_bmi_data.get('bmi', '')
+    goal_value = user_bmi_data.get('goal', '')
+    prompt = f"根據BMI {bmi_value}，請為我生成一份訓練菜單，目標是{goal_value}。"
+    response = openai.completions.create(
+        engine="gpt-3.5-turbo",
+        prompt=prompt,
+        max_tokens=150
+    )
+
+    training_menu = response['choices'][0]['text']
+
+    # 記錄使用者的訓練菜單
+    user_training_menu[user_id] = training_menu
+
+    # 回傳訓練菜單給使用者
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=f"你的訓練菜單如下：\n{training_menu}")
+    )
+
 
     # 當使用者選擇"影片教學按鈕"時
     elif message_text == '影片教學按鈕':
