@@ -210,9 +210,18 @@ def reminder_thread():
 
 # 發送提醒給使用者
 def send_reminder(user_id):
-    # 開啟提醒執行緒
-    threading.Thread(target=reminder_thread).start()
+    # 建立一個執行緒
+    reminder_thread = threading.Thread(target=reminder_thread)
+    
+    # 啟動執行緒
+    reminder_thread.start()
+
+    # 等待執行緒完成
+    reminder_thread.join()
+
+    # 發送提醒給使用者
     line_bot_api.push_message(user_id, TextSendMessage(text="該去健身啦！"))
+
    
 if __name__ == "__main__":
     app.run()
