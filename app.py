@@ -87,8 +87,10 @@ def handle_message(event):
             return
 
         # 向ChatGPT請求生成訓練菜單
-        user_bmi_data = user_bmi[user_id]
-        prompt = f"根據BMI {user_bmi_data['bmi']}，請為我生成一份訓練菜單，目標是{user_bmi_data['goal']}。"
+        user_bmi_data = user_bmi.get(user_id, {})
+        bmi_value = user_bmi_data.get('bmi', '')
+        goal_value = user_bmi_data.get('goal', '')
+        prompt = f"根據BMI {bmi_value}，請為我生成一份訓練菜單，目標是{goal_value}。"
         response = openai.completions.create(
             engine="gpt-3.5-turbo",
             prompt=prompt,
