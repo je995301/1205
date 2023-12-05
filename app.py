@@ -209,7 +209,10 @@ def handle_reminder_time(event):
     message_text = event.message.text
 
     # 檢查使用者的狀態
-    if user_id in user_reminders and user_reminders[user_id]['status'] == 'waiting_time':
+    if (
+        user_id in user_reminders and
+        user_reminders[user_id].get('status') == 'waiting_time'
+    ):
         # 將使用者的提醒時間加入排程
         schedule_time = message_text
         schedule.every().day.at(schedule_time).do(send_reminder, user_id=user_id)
