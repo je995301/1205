@@ -3,4 +3,4 @@ line-bot-sdk
 openai
 gunicorn
 schedule
-Werkzeug==2.0.0
+Werkzeug
