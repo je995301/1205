@@ -9,6 +9,7 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from datetime import datetime, time
 
 
 
@@ -213,18 +214,27 @@ def handle_reminder_time(event):
         user_id in user_reminders and
         user_reminders[user_id].get('status') == 'waiting_time' and message_text is not None
     ):
-        # 將使用者的提醒時間加入排程
-        schedule_time = message_text
-        schedule.every().day.at(schedule_time).do(send_reminder, user_id=user_id)
+        try:
+            # 將使用者的提醒時間轉換為 datetime.time 物件
+            reminder_time = datetime.strptime(message_text, "%H:%M").time()
 
-        # 設定使用者的狀態為提醒已設定
-        user_reminders[user_id]['status'] = 'reminder_set'
+            # 將使用者的提醒時間加入排程
+            schedule.every().day.at(reminder_time).do(send_reminder, user_id=user_id)
 
-        # 回應使用者提醒已設定
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=f"提醒已設定在每天 {schedule_time} 通知你去健身")
-        )
+            # 設定使用者的狀態為提醒已設定
+            user_reminders[user_id]['status'] = 'reminder_set'
+
+            # 回應使用者提醒已設定
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"提醒已設定在每天 {message_text} 通知你去健身")
+            )
+        except ValueError:
+            # 轉換失敗的例外處理
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text="請輸入正確的時間格式，例如：HH:MM")
+            )
 
 # 提醒功能的執行緒
 def reminder_thread():
@@ -234,14 +244,8 @@ def reminder_thread():
 
 # 發送提醒給使用者
 def send_reminder(user_id):
-    # 建立一個執行緒
-    reminder_thread = threading.Thread(target=reminder_thread)
-    
-    # 啟動執行緒
-    reminder_thread.start()
-
-    # 等待執行緒完成
-    reminder_thread.join()
+    # 在這裡執行 schedule.run_pending()
+    schedule.run_pending()
 
     # 發送提醒給使用者
     line_bot_api.push_message(user_id, TextSendMessage(text="該去健身啦！"))
