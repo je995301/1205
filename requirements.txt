@@ -1,6 +1,6 @@
 Flask==2.2.2
 line-bot-sdk
 openai
-gunicorn
+gunicorn>=20.0
 schedule
-pytest
+Werkzeug>=2.0
