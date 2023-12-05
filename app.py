@@ -57,7 +57,7 @@ def handle_message(event):
          ) 
     
     
-    elif ' ' in message_text:
+    elif message_text and ' ' in message_text:
         height, weight = map(float, message_text.split(' '))
         bmi = weight / ((height / 100) ** 2)
         
