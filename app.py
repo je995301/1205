@@ -195,7 +195,8 @@ def format_menu(health_menu):
     menu_items = health_menu.split('\n')
     formatted_menu = "健康菜單：\n"
     for item in menu_items:
-        formatted_menu += f"- {item}\n"
+        if item is not None:
+            formatted_menu += f"- {item}\n"
     return formatted_menu
     
 # 處理使用者的選擇
