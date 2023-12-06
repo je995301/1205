@@ -10,11 +10,13 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from datetime import datetime, time
+from openai import ChatCompletion
 
 
 
 #openai key
 openai.api_key = os.getenv("OPENAI_API_KEY")
+# openai.api_key = os.getenv(openai_key)
 
 app = Flask(__name__)
 
@@ -96,39 +98,11 @@ def handle_message(event):
         # 設定使用者的狀態為等待目標輸入
         user_bmi[user_id]['status'] = 'waiting_goal'
     
-    # 在處理使用者的選擇部分新增以下程式碼
-    elif user_id in user_bmi and user_bmi[user_id].get('status') == 'waiting_goal':
-        # 紀錄使用者的目標
-        user_bmi[user_id]['goal'] = message_text
-    
-        # 向ChatGPT請求生成訓練菜單
-        user_bmi_data = user_bmi.get(user_id, {})
-        bmi_value = user_bmi_data.get('bmi', '未知')
-        goal_value = user_bmi_data.get('goal', '未設定目標')
-        prompt = f"根據BMI {bmi_value}，請為我生成一份訓練菜單，目標是{goal_value}。"
-        response = openai.completions.create(
-            engine="gpt-3.5-turbo",
-            prompt=prompt,
-            max_tokens=150
-        )
-    
-        training_menu = response['choices'][0]['text']
-    
-        # 記錄使用者的訓練菜單
-        user_training_menu[user_id] = training_menu
-    
-        # 回傳訓練菜單給使用者
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=f"你的訓練菜單如下：\n{training_menu}")
-        )
-
-
     # 當使用者選擇"影片教學按鈕"時
     elif message_text == '影片教學按鈕':
         # 向ChatGPT請求生成部位訓練相關介紹
-        response = openai.completions.create(
-            engine="gpt-3.5-turbo",
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
             prompt="請為我提供一個部位訓練，例如：胸肌訓練。",
             max_tokens=150
         )
@@ -149,8 +123,8 @@ def handle_message(event):
     elif message_text == '健康日誌':
         menu_prompt = "請生成一份健康菜單，用於健康日誌。"
         # 向 ChatGPT 請求生成健康菜單
-        response = openai.completions.create(
-            engine="gpt-3.5-turbo",
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
             prompt=menu_prompt,
             max_tokens=150
         )
@@ -180,8 +154,49 @@ def handle_message(event):
     elif message_text == '聯絡我們':
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="聯絡我們：xdgame4398@gmail.com")
+            TextSendMessage(text="聯絡我們：je995301@gmail.com")
         )
+    # 在處理使用者的選擇部分新增以下程式碼
+    elif user_id in user_bmi and user_bmi[user_id].get('status') == 'waiting_goal':
+        # 紀錄使用者的目標
+        user_bmi[user_id]['goal'] = message_text
+    
+        # 向ChatGPT請求生成訓練菜單
+        user_bmi_data = user_bmi.get(user_id, {})
+        bmi_value = user_bmi_data.get('bmi', '未知')
+        goal_value = user_bmi_data.get('goal', '未設定目標')
+        prompt = f"根據BMI {bmi_value}，請為我生成一份精簡的每周健身訓練菜單，目標是{goal_value}。"
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=500  # 如果想要限制生成的 tokens 數量，可以使用 stop 參數
+        )
+        # user_bmi_data = user_bmi.get(user_id, {})
+        # bmi_value = user_bmi_data.get('bmi', '未知')
+        # goal_value = user_bmi_data.get('goal', '未設定目標')
+        # prompt = f"根據BMI {bmi_value}，請為我生成一份訓練菜單，目標是{goal_value}。"
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo",
+        #     prompt=prompt,
+        #     max_tokens=150
+        # )
+    
+        # training_menu = response['choices'][0]['text']
+        training_menu = response['choices'][0]['message']['content']
+        # 記錄使用者的訓練菜單
+        user_training_menu[user_id] = training_menu
+    
+        # 回傳訓練菜單給使用者
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=f"你的訓練菜單如下：\n{training_menu}")
+        )
+
+
+        
 
     # 其他未定義的訊息
     else:
